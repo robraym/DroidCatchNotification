@@ -142,9 +142,9 @@ public class MainActivity extends AppCompatActivity {
         }
 
         boolean notificationReady = DroidCommon.IsNotificationListenerEnabled(context);
-        List<String> history = showingTrash
-                ? DroidCommon.ReadTrashHistory(context)
-                : DroidCommon.ReadLocalHistory(context);
+        List<String> localHistory = DroidCommon.ReadLocalHistory(context);
+        List<String> trashHistory = DroidCommon.ReadTrashHistory(context);
+        List<String> history = showingTrash ? trashHistory : localHistory;
         List<String> visibleHistory = filterHistory(history);
         boolean searchActive = !TextUtils.isEmpty(searchQuery);
         int total = history.size();
@@ -159,7 +159,11 @@ public class MainActivity extends AppCompatActivity {
             buttonNotifications.setVisibility(View.VISIBLE);
         }
 
-        buttonTrash.setText(showingTrash ? R.string.history_back : R.string.history_open_trash);
+        if (showingTrash) {
+            buttonTrash.setText(getString(R.string.history_back, localHistory.size()));
+        } else {
+            buttonTrash.setText(getString(R.string.history_open_trash, trashHistory.size()));
+        }
 
         if (searchActive) {
             textHistoryCount.setText(getResources().getQuantityString(
@@ -272,6 +276,17 @@ public class MainActivity extends AppCompatActivity {
                 renderHistory();
             }
         });
+        header.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View view) {
+                if (showingTrash) {
+                    showRestoreGroupDialog(group);
+                } else {
+                    showTrashGroupDialog(group);
+                }
+                return true;
+            }
+        });
 
         return header;
     }
@@ -351,6 +366,24 @@ public class MainActivity extends AppCompatActivity {
                 .show();
     }
 
+    private void showTrashGroupDialog(final HistoryGroup group) {
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.trash_group_send_title)
+                .setMessage(getString(R.string.trash_group_send_message, group.items.size()))
+                .setNegativeButton(R.string.dialog_cancel, null)
+                .setPositiveButton(R.string.trash_send_confirm, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        for (HistoryText item : group.items) {
+                            DroidCommon.MoveLocalHistoryToTrash(context, item.rawLine);
+                        }
+                        expandedDays.remove(group.day);
+                        renderHistory();
+                    }
+                })
+                .show();
+    }
+
     private void showRestoreDialog(final HistoryText historyText) {
         new AlertDialog.Builder(this)
                 .setTitle(R.string.trash_restore_title)
@@ -360,6 +393,24 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
                         DroidCommon.RestoreTrashHistory(context, historyText.rawLine);
+                        renderHistory();
+                    }
+                })
+                .show();
+    }
+
+    private void showRestoreGroupDialog(final HistoryGroup group) {
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.trash_group_restore_title)
+                .setMessage(getString(R.string.trash_group_restore_message, group.items.size()))
+                .setNegativeButton(R.string.dialog_cancel, null)
+                .setPositiveButton(R.string.trash_restore_confirm, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        for (HistoryText item : group.items) {
+                            DroidCommon.RestoreTrashHistory(context, item.rawLine);
+                        }
+                        expandedDays.remove(group.day);
                         renderHistory();
                     }
                 })
