@@ -13,7 +13,7 @@
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:paddingLeft="14dp"
-        android:paddingTop="12dp"
+        android:paddingTop="8dp"
         android:paddingRight="14dp"
         android:paddingBottom="18dp">
 
@@ -38,18 +38,24 @@
                     android:textSize="13sp" />
             </LinearLayout>
 
-            <Button
+            <TextView
                 android:id="@+id/buttonNotifications"
                 android:layout_width="wrap_content"
-                android:layout_height="38dp"
+                android:layout_height="wrap_content"
                 android:background="@drawable/one_ui_button_secondary"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:minHeight="40dp"
                 android:minWidth="0dp"
-                android:paddingLeft="12dp"
-                android:paddingRight="12dp"
+                android:paddingLeft="14dp"
+                android:paddingTop="7dp"
+                android:paddingRight="14dp"
+                android:paddingBottom="7dp"
+                android:singleLine="true"
                 android:text="@string/history_open_notifications"
-                android:textAllCaps="false"
                 android:textColor="@color/one_ui_blue"
-                android:textSize="13sp"
+                android:textSize="12sp"
                 android:textStyle="bold"
                 android:visibility="gone"
                 tools:visibility="visible" />
@@ -83,7 +89,6 @@
             android:id="@+id/historyContainer"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
             android:orientation="vertical" />
     </LinearLayout>
 </ScrollView>

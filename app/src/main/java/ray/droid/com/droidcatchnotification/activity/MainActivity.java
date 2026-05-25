@@ -7,7 +7,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.view.Gravity;
 import android.view.View;
-import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -25,7 +24,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView textHistoryCount;
     private TextView textEmptyHistory;
     private LinearLayout historyContainer;
-    private Button buttonNotifications;
+    private TextView buttonNotifications;
     private final Handler historyHandler = new Handler();
     private boolean autoRefreshRunning;
     private final Runnable historyRefreshRunnable = new Runnable() {
@@ -136,7 +135,7 @@ public class MainActivity extends AppCompatActivity {
         TextView date = new TextView(context);
         date.setText(historyText.date);
         date.setTextColor(getResources().getColor(R.color.one_ui_text_secondary));
-        date.setTextSize(12);
+        date.setTextSize(9);
         date.setGravity(Gravity.TOP);
         item.addView(date, new LinearLayout.LayoutParams(dp(94), LinearLayout.LayoutParams.WRAP_CONTENT));
 

@@ -9,7 +9,7 @@
     <string name="history_status_ready">Histórico local ativo: %1$s neste aparelho.</string>
     <string name="history_status_permission_missing">Acesso às notificações inativo. Ative a permissão para registrar novas notificações.</string>
     <string name="history_empty">Nenhuma notificação capturada ainda. Quando uma notificação compatível chegar, ela aparecerá aqui.</string>
-    <string name="history_open_notifications">Permissões</string>
+    <string name="history_open_notifications">Permitir</string>
     <string name="history_item_icon">N</string>
     <string name="history_item_unknown_date">Sem data</string>
 </resources>
