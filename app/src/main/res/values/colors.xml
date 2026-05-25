@@ -3,4 +3,13 @@
     <color name="colorPrimary">#3F51B5</color>
     <color name="colorPrimaryDark">#303F9F</color>
     <color name="colorAccent">#FF4081</color>
+    <color name="one_ui_background">#0B0D10</color>
+    <color name="one_ui_surface">#171A20</color>
+    <color name="one_ui_surface_alt">#20242C</color>
+    <color name="one_ui_text_primary">#F4F6FA</color>
+    <color name="one_ui_text_secondary">#B4BAC5</color>
+    <color name="one_ui_blue">#4C8DFF</color>
+    <color name="one_ui_green">#38C172</color>
+    <color name="one_ui_red">#FF5A5F</color>
+    <color name="one_ui_stroke">#2B303A</color>
 </resources>
