@@ -1,13 +1,15 @@
 <resources>
     <string name="app_name">Catch Notification</string>
-    <string name="main_title">Catch Notification</string>
-    <string name="main_subtitle">Histórico de notificações autorizado pelo usuário</string>
-    <string name="main_status_ready">Pronto para capturar notificações permitidas.</string>
-    <string name="main_status_drive_missing">Arquivo do Google Drive ainda não configurado.</string>
-    <string name="main_notifications_title">Acesso às notificações</string>
-    <string name="main_notifications_summary">Ative o serviço Catch Notification nas configurações do Android para permitir a leitura das notificações.</string>
-    <string name="main_drive_title">Arquivo no Google Drive</string>
-    <string name="main_drive_summary">Crie ou reconecte o arquivo de texto onde o histórico será salvo.</string>
-    <string name="main_open_notifications">Abrir permissões</string>
-    <string name="main_setup_drive">Configurar Drive</string>
+    <string name="history_count_initial">Carregando histórico local</string>
+    <plurals name="history_count">
+        <item quantity="one">%1$d notificação salva</item>
+        <item quantity="other">%1$d notificações salvas</item>
+    </plurals>
+    <string name="history_status_ready_initial">Histórico local pronto</string>
+    <string name="history_status_ready">Histórico local ativo: %1$s neste aparelho.</string>
+    <string name="history_status_permission_missing">Acesso às notificações inativo. Ative a permissão para registrar novas notificações.</string>
+    <string name="history_empty">Nenhuma notificação capturada ainda. Quando uma notificação compatível chegar, ela aparecerá aqui.</string>
+    <string name="history_open_notifications">Permissões</string>
+    <string name="history_item_icon">N</string>
+    <string name="history_item_unknown_date">Sem data</string>
 </resources>

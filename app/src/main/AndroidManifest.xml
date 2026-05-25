@@ -23,14 +23,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity
-            android:name=".gdrive.CreateFileActivity"
-            android:label="@string/app_name"
-            android:theme="@style/TranslucentTheme"></activity>
-        <activity
-            android:name=".gdrive.AppendContentsActivity"
-            android:theme="@style/TranslucentTheme" />
-
         <service
             android:name=".notification.DroidNotification"
             android:exported="true"

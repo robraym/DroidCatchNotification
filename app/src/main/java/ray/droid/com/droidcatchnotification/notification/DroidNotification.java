@@ -3,14 +3,12 @@ package ray.droid.com.droidcatchnotification.notification;
 import android.annotation.TargetApi;
 import android.app.Notification;
 import android.content.Context;
-import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.service.notification.StatusBarNotification;
 import android.util.Log;
 
 import ray.droid.com.droidcatchnotification.common.DroidCommon;
-import ray.droid.com.droidcatchnotification.gdrive.AppendContentsActivity;
 
 import static ray.droid.com.droidcatchnotification.common.DroidCommon.TAG;
 
@@ -20,6 +18,10 @@ import static ray.droid.com.droidcatchnotification.common.DroidCommon.TAG;
  */
 
 public class DroidNotification extends DroidBaseNotification {
+    private static final long DUPLICATE_WINDOW_MS = 15000;
+    private static String lastFingerprint = "";
+    private static long lastFingerprintTime = 0;
+
     CharSequence tit;
     String msg;
 
@@ -30,19 +32,15 @@ public class DroidNotification extends DroidBaseNotification {
         getNotificationKitKat(sbn);
 
 
-        if (!tit.toString().isEmpty()) {
+        if (tit != null && !tit.toString().isEmpty()) {
 
             try {
-
-
-
-                Intent mIntent = new Intent(getBaseContext(), AppendContentsActivity.class);
-                mIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-           //     mIntent.putExtra(DroidConstantes.MESSAGE, getDataNotification());
+                if (isDuplicateNotification()) {
+                    Log.i(TAG, "Duplicated notification ignored");
+                    return;
+                }
                 DroidCommon.MESSAGE = getDataNotification();
-                startActivity(mIntent);
-
-
+                DroidCommon.AppendLocalHistory(context, DroidCommon.MESSAGE);
             } catch (Exception ex) {
                 Log.d(TAG, "onNotificationPosted " + ex.getMessage());
             }
@@ -55,6 +53,19 @@ public class DroidNotification extends DroidBaseNotification {
         return DroidCommon.getDateTimeFormated() + " " + tit + " " + msg;
     }
 
+    private boolean isDuplicateNotification() {
+        long now = System.currentTimeMillis();
+        String fingerprint = (tit + "|" + msg).trim().toLowerCase();
+
+        if (fingerprint.equals(lastFingerprint) && now - lastFingerprintTime < DUPLICATE_WINDOW_MS) {
+            return true;
+        }
+
+        lastFingerprint = fingerprint;
+        lastFingerprintTime = now;
+        return false;
+    }
+
 
     @TargetApi(Build.VERSION_CODES.KITKAT)
     private void getNotificationKitKat(StatusBarNotification mStatusBarNotification) {
@@ -65,17 +76,20 @@ public class DroidNotification extends DroidBaseNotification {
                 pack.contains("com.android.mms") ||
                 pack.contains("com.facebook.orca")) {
             Bundle extras = mStatusBarNotification.getNotification().extras;
-            tit = extras.getCharSequence(Notification.EXTRA_TITLE); // Title
+            CharSequence title = extras.getCharSequence(Notification.EXTRA_TITLE); // Title
+            tit = title == null ? "" : title;
             CharSequence desc = extras.getCharSequence(Notification.EXTRA_TEXT); // / Description
             try {
                 Bundle bigExtras = mStatusBarNotification.getNotification().extras;
                 CharSequence[] descArray = bigExtras.getCharSequenceArray(Notification.EXTRA_TEXT_LINES);
-                msg = descArray[descArray.length - 1].toString();
+                if (descArray != null && descArray.length > 0) {
+                    msg = descArray[descArray.length - 1].toString();
+                }
 
             } catch (Exception ex) {
 
             }
-            if (msg.isEmpty()) {
+            if (msg.isEmpty() && desc != null) {
                 msg = desc.toString();
             }
 
