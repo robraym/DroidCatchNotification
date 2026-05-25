@@ -42,6 +42,7 @@ public class DroidCommon {
     public static final int PLAY_SERVICES_RESOLUTION_REQUEST = 9000;
     public static final String TAG = "DroidCatchNotification";
     public static final String HISTORY_FILE = "catch_notification_history.txt";
+    public static final String TRASH_FILE = "catch_notification_trash.txt";
     private static DriveFile driveFile;
 
     public static void ShowListener(Context context) {
@@ -115,9 +116,35 @@ public class DroidCommon {
     }
 
     public static List<String> ReadLocalHistory(Context context) {
+        return CompactDuplicateHistory(ReadLines(context, HISTORY_FILE));
+    }
+
+    public static List<String> ReadTrashHistory(Context context) {
+        return ReadLines(context, TRASH_FILE);
+    }
+
+    public static boolean MoveLocalHistoryToTrash(Context context, String message) {
+        if (!RemoveFirstLine(context, HISTORY_FILE, message)) {
+            return false;
+        }
+
+        AppendLine(context, TRASH_FILE, message);
+        return true;
+    }
+
+    public static boolean RestoreTrashHistory(Context context, String message) {
+        if (!RemoveFirstLine(context, TRASH_FILE, message)) {
+            return false;
+        }
+
+        AppendLine(context, HISTORY_FILE, message);
+        return true;
+    }
+
+    private static List<String> ReadLines(Context context, String fileName) {
         List<String> history = new ArrayList<>();
         try (BufferedReader reader = new BufferedReader(
-                new InputStreamReader(context.openFileInput(HISTORY_FILE)))) {
+                new InputStreamReader(context.openFileInput(fileName)))) {
             String line;
             while ((line = reader.readLine()) != null) {
                 String cleanLine = line.trim();
@@ -126,11 +153,52 @@ public class DroidCommon {
                 }
             }
         } catch (FileNotFoundException ex) {
-            Log.i(TAG, "Local history file does not exist yet: " + HISTORY_FILE);
+            Log.i(TAG, "Local file does not exist yet: " + fileName);
         } catch (Exception ex) {
-            Log.e(TAG, "Unable to read local history", ex);
+            Log.e(TAG, "Unable to read local file: " + fileName, ex);
         }
-        return CompactDuplicateHistory(history);
+        return history;
+    }
+
+    private static void AppendLine(Context context, String fileName, String message) {
+        try (Writer writer = new OutputStreamWriter(
+                context.openFileOutput(fileName, Context.MODE_APPEND))) {
+            writer.write(message);
+            writer.write("\n");
+            Log.i(TAG, "Local file updated: " + fileName);
+        } catch (Exception ex) {
+            Log.e(TAG, "Unable to append local file: " + fileName, ex);
+        }
+    }
+
+    private static boolean RemoveFirstLine(Context context, String fileName, String message) {
+        List<String> lines = ReadLines(context, fileName);
+        boolean removed = false;
+        List<String> updatedLines = new ArrayList<>();
+
+        for (String line : lines) {
+            if (!removed && line.equals(message)) {
+                removed = true;
+                continue;
+            }
+            updatedLines.add(line);
+        }
+
+        if (!removed) {
+            return false;
+        }
+
+        try (Writer writer = new OutputStreamWriter(
+                context.openFileOutput(fileName, Context.MODE_PRIVATE))) {
+            for (String line : updatedLines) {
+                writer.write(line);
+                writer.write("\n");
+            }
+            return true;
+        } catch (Exception ex) {
+            Log.e(TAG, "Unable to rewrite local file: " + fileName, ex);
+            return false;
+        }
     }
 
     private static boolean IsRecentDuplicate(Context context, String message) {

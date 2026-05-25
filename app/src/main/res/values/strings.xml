@@ -1,15 +1,41 @@
 <resources>
-    <string name="app_name">Catch Notification</string>
+    <string name="app_name">Catch</string>
     <string name="history_count_initial">Carregando histórico local</string>
     <plurals name="history_count">
         <item quantity="one">%1$d notificação salva</item>
         <item quantity="other">%1$d notificações salvas</item>
     </plurals>
+    <plurals name="history_group_count">
+        <item quantity="one">%1$d notificação</item>
+        <item quantity="other">%1$d notificações</item>
+    </plurals>
+    <plurals name="trash_count">
+        <item quantity="one">%1$d notificação na lixeira</item>
+        <item quantity="other">%1$d notificações na lixeira</item>
+    </plurals>
+    <plurals name="search_results">
+        <item quantity="one">%1$d resultado encontrado</item>
+        <item quantity="other">%1$d resultados encontrados</item>
+    </plurals>
     <string name="history_status_ready_initial">Histórico local pronto</string>
     <string name="history_status_ready">Histórico local ativo: %1$s neste aparelho.</string>
     <string name="history_status_permission_missing">Acesso às notificações inativo. Ative a permissão para registrar novas notificações.</string>
     <string name="history_empty">Nenhuma notificação capturada ainda. Quando uma notificação compatível chegar, ela aparecerá aqui.</string>
+    <string name="search_empty">Nenhuma mensagem encontrada.</string>
+    <string name="trash_empty">Lixeira vazia.</string>
     <string name="history_open_notifications">Permitir</string>
+    <string name="history_open_trash">Lixeira</string>
+    <string name="history_back">Histórico</string>
+    <string name="search_icon">🔎</string>
+    <string name="search_hint">Pesquisar mensagem</string>
+    <string name="search_clear">x</string>
+    <string name="trash_send_title">Enviar para a lixeira?</string>
+    <string name="trash_send_message">A notificação sairá do histórico e poderá ser restaurada pela lixeira.</string>
+    <string name="trash_send_confirm">Enviar</string>
+    <string name="trash_restore_title">Restaurar notificação?</string>
+    <string name="trash_restore_message">A notificação voltará para o histórico local.</string>
+    <string name="trash_restore_confirm">Restaurar</string>
+    <string name="dialog_cancel">Cancelar</string>
     <string name="history_item_icon">N</string>
     <string name="history_item_unknown_date">Sem data</string>
 </resources>
