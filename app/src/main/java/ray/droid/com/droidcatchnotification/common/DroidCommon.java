@@ -237,13 +237,21 @@ public class DroidCommon {
             return false;
         }
 
-        String[] parts = line.split("\t", 3);
-        if (parts.length < 3) {
+        String[] imageParts = line.split("\t", 4);
+        if (imageParts.length < 3) {
             return false;
         }
 
-        String packageName = parts[1].trim().toLowerCase();
-        String content = parts[2].trim().replace(".", "").toLowerCase();
+        String packageName = imageParts[1].trim().toLowerCase();
+        String content = imageParts[imageParts.length == 4 ? 3 : 2]
+                .trim()
+                .replace(".", "")
+                .toLowerCase();
+        if (content.startsWith("carregamento conectado")
+                || content.startsWith("carregamento desconectado")) {
+            return false;
+        }
+
         boolean systemPackage = IsSystemPackageName(packageName);
 
         return systemPackage

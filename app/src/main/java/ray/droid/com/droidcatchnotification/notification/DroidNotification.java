@@ -3,6 +3,7 @@ package ray.droid.com.droidcatchnotification.notification;
 import android.annotation.TargetApi;
 import android.app.Notification;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.drawable.Drawable;
@@ -11,6 +12,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.service.notification.StatusBarNotification;
+import android.text.TextUtils;
 import android.util.Log;
 
 import java.io.File;
@@ -27,6 +29,8 @@ import static ray.droid.com.droidcatchnotification.common.DroidCommon.TAG;
 
 public class DroidNotification extends DroidBaseNotification {
     private static final long DUPLICATE_WINDOW_MS = 15000;
+    private static final String STATE_PREFS = "catch_notification_state";
+    private static final String PREF_CHARGING_ACTIVE = "charging_active";
     private static String lastFingerprint = "";
     private static long lastFingerprintTime = 0;
 
@@ -39,6 +43,10 @@ public class DroidNotification extends DroidBaseNotification {
     public void onNotificationPosted(StatusBarNotification sbn) {
         Log.i(TAG, "onNotificationPosted");
         Context context = getBaseContext();
+        if (handleChargingNotificationPosted(sbn, context)) {
+            return;
+        }
+
         getNotificationKitKat(sbn, context);
 
 
@@ -57,6 +65,21 @@ public class DroidNotification extends DroidBaseNotification {
         }
 
 
+    }
+
+    @Override
+    public void onNotificationRemoved(StatusBarNotification sbn) {
+        Context context = getBaseContext();
+        if (!isChargingNotification(sbn)) {
+            return;
+        }
+
+        if (!isChargingActive(context)) {
+            return;
+        }
+
+        setChargingActive(context, false);
+        appendChargingEvent(context, sbn.getPackageName(), "Carregamento desconectado");
     }
 
     private String getDataNotification() {
@@ -90,6 +113,80 @@ public class DroidNotification extends DroidBaseNotification {
         lastFingerprint = fingerprint;
         lastFingerprintTime = now;
         return false;
+    }
+
+    private boolean handleChargingNotificationPosted(StatusBarNotification sbn, Context context) {
+        if (!isChargingNotification(sbn)) {
+            return false;
+        }
+
+        if (!isChargingActive(context)) {
+            setChargingActive(context, true);
+            appendChargingEvent(context, sbn.getPackageName(), "Carregamento conectado");
+        } else {
+            Log.i(TAG, "Charging update ignored");
+        }
+
+        return true;
+    }
+
+    private void appendChargingEvent(Context context, String packageName, String message) {
+        sourcePackageName = packageName;
+        imageFileName = "";
+        tit = message;
+        msg = "";
+        DroidCommon.AppendLocalHistory(context, getDataNotification());
+    }
+
+    private boolean isChargingActive(Context context) {
+        return context.getSharedPreferences(STATE_PREFS, Context.MODE_PRIVATE)
+                .getBoolean(PREF_CHARGING_ACTIVE, false);
+    }
+
+    private void setChargingActive(Context context, boolean active) {
+        SharedPreferences.Editor editor = context.getSharedPreferences(STATE_PREFS, Context.MODE_PRIVATE).edit();
+        editor.putBoolean(PREF_CHARGING_ACTIVE, active);
+        editor.apply();
+    }
+
+    private boolean isChargingNotification(StatusBarNotification sbn) {
+        if (sbn == null || !isSystemPackage(sbn.getPackageName())) {
+            return false;
+        }
+
+        String tag = sanitizeHistoryField(sbn.getTag()).toLowerCase();
+        String groupKey = sanitizeHistoryField(sbn.getGroupKey()).toLowerCase();
+        if (tag.contains("charging") || tag.contains("charge") || groupKey.contains("charging")) {
+            return true;
+        }
+
+        Notification notification = sbn.getNotification();
+        if (notification == null || notification.extras == null) {
+            return false;
+        }
+
+        Bundle extras = notification.extras;
+        CharSequence title = extras.getCharSequence(Notification.EXTRA_TITLE);
+        CharSequence text = extras.getCharSequence(Notification.EXTRA_TEXT);
+        CharSequence bigText = extras.getCharSequence(Notification.EXTRA_BIG_TEXT);
+        CharSequence titleBig = extras.getCharSequence("android.title.big");
+        String content = (sanitizeHistoryField(title) + " "
+                + sanitizeHistoryField(text) + " "
+                + sanitizeHistoryField(bigText) + " "
+                + sanitizeHistoryField(titleBig)).toLowerCase();
+
+        return isChargingText(content);
+    }
+
+    private boolean isChargingText(String text) {
+        if (TextUtils.isEmpty(text)) {
+            return false;
+        }
+
+        return text.contains("carregando")
+                || text.contains("carregamento")
+                || text.contains("charging")
+                || text.contains("cargando");
     }
 
 
