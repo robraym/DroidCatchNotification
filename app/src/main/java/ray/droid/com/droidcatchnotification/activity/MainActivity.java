@@ -418,7 +418,7 @@ public class MainActivity extends AppCompatActivity {
         LinearLayout item = new LinearLayout(context);
         item.setOrientation(LinearLayout.HORIZONTAL);
         item.setGravity(Gravity.TOP);
-        item.setPadding(dp(2), dp(6), dp(2), dp(6));
+        item.setPadding(dp(1), dp(3), dp(1), dp(3));
         item.setOnClickListener(openSourceListener);
         wrapper.addView(item);
 
@@ -426,8 +426,8 @@ public class MainActivity extends AppCompatActivity {
         View unreadDot = new View(context);
         unreadDot.setBackgroundResource(R.drawable.one_ui_unread_dot);
         unreadDot.setVisibility(unread ? View.VISIBLE : View.INVISIBLE);
-        LinearLayout.LayoutParams dotParams = new LinearLayout.LayoutParams(dp(7), dp(7));
-        dotParams.setMargins(0, dp(5), dp(7), 0);
+        LinearLayout.LayoutParams dotParams = new LinearLayout.LayoutParams(dp(6), dp(6));
+        dotParams.setMargins(0, dp(4), dp(5), 0);
         item.addView(unreadDot, dotParams);
 
         LinearLayout metaColumn = new LinearLayout(context);
@@ -435,7 +435,7 @@ public class MainActivity extends AppCompatActivity {
         metaColumn.setGravity(Gravity.CENTER_HORIZONTAL);
         metaColumn.setOnClickListener(openSourceListener);
         metaColumn.setOnLongClickListener(actionListener);
-        item.addView(metaColumn, new LinearLayout.LayoutParams(dp(42), LinearLayout.LayoutParams.WRAP_CONTENT));
+        item.addView(metaColumn, new LinearLayout.LayoutParams(dp(38), LinearLayout.LayoutParams.WRAP_CONTENT));
 
         String sourceLabel = getSourceAppLabel(historyText.packageName);
         Drawable sourceIcon = getSourceAppIcon(historyText.packageName);
@@ -444,12 +444,12 @@ public class MainActivity extends AppCompatActivity {
             source.setImageDrawable(sourceIcon);
             source.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
             source.setBackgroundResource(R.drawable.one_ui_icon_background);
-            source.setPadding(dp(4), dp(4), dp(4), dp(4));
+            source.setPadding(dp(3), dp(3), dp(3), dp(3));
             source.setContentDescription(sourceLabel);
             source.setOnClickListener(openSourceListener);
             source.setOnLongClickListener(actionListener);
             LinearLayout.LayoutParams sourceParams = new LinearLayout.LayoutParams(dp(28), dp(28));
-            sourceParams.setMargins(0, 0, 0, dp(3));
+            sourceParams.setMargins(0, 0, 0, dp(2));
             metaColumn.addView(source, sourceParams);
         } else if (!TextUtils.isEmpty(sourceLabel)) {
             TextView source = new TextView(context);
@@ -458,11 +458,12 @@ public class MainActivity extends AppCompatActivity {
             source.setTextSize(10);
             source.setGravity(Gravity.CENTER);
             source.setBackgroundResource(R.drawable.one_ui_icon_background);
+            source.setIncludeFontPadding(false);
             source.setSingleLine(true);
             source.setOnClickListener(openSourceListener);
             source.setOnLongClickListener(actionListener);
             LinearLayout.LayoutParams sourceParams = new LinearLayout.LayoutParams(dp(28), dp(28));
-            sourceParams.setMargins(0, 0, 0, dp(3));
+            sourceParams.setMargins(0, 0, 0, dp(2));
             metaColumn.addView(source, sourceParams);
         }
 
@@ -471,6 +472,7 @@ public class MainActivity extends AppCompatActivity {
         date.setTextColor(getResources().getColor(R.color.one_ui_text_secondary));
         date.setTextSize(9);
         date.setGravity(Gravity.CENTER);
+        date.setIncludeFontPadding(false);
         date.setSingleLine(true);
         date.setOnClickListener(openSourceListener);
         date.setOnLongClickListener(actionListener);
@@ -484,6 +486,7 @@ public class MainActivity extends AppCompatActivity {
                 ? R.color.one_ui_text_primary
                 : R.color.one_ui_text_secondary));
         message.setTextSize(13);
+        message.setIncludeFontPadding(false);
         message.setSingleLine(false);
         message.setMaxLines(2);
         message.setEllipsize(TextUtils.TruncateAt.END);
@@ -494,6 +497,7 @@ public class MainActivity extends AppCompatActivity {
                 0,
                 LinearLayout.LayoutParams.WRAP_CONTENT,
                 1);
+        messageParams.setMargins(dp(2), 0, 0, 0);
         item.addView(message, messageParams);
 
         Bitmap previewBitmap = getNotificationImage(historyText.imageFileName);
