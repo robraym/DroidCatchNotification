@@ -11,6 +11,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
@@ -431,36 +432,51 @@ public class MainActivity extends AppCompatActivity {
 
         LinearLayout metaColumn = new LinearLayout(context);
         metaColumn.setOrientation(LinearLayout.VERTICAL);
+        metaColumn.setGravity(Gravity.CENTER_HORIZONTAL);
         metaColumn.setOnClickListener(openSourceListener);
         metaColumn.setOnLongClickListener(actionListener);
-        item.addView(metaColumn, new LinearLayout.LayoutParams(dp(56), LinearLayout.LayoutParams.WRAP_CONTENT));
+        item.addView(metaColumn, new LinearLayout.LayoutParams(dp(42), LinearLayout.LayoutParams.WRAP_CONTENT));
+
+        String sourceLabel = getSourceAppLabel(historyText.packageName);
+        Drawable sourceIcon = getSourceAppIcon(historyText.packageName);
+        if (sourceIcon != null) {
+            ImageView source = new ImageView(context);
+            source.setImageDrawable(sourceIcon);
+            source.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
+            source.setBackgroundResource(R.drawable.one_ui_icon_background);
+            source.setPadding(dp(4), dp(4), dp(4), dp(4));
+            source.setContentDescription(sourceLabel);
+            source.setOnClickListener(openSourceListener);
+            source.setOnLongClickListener(actionListener);
+            LinearLayout.LayoutParams sourceParams = new LinearLayout.LayoutParams(dp(28), dp(28));
+            sourceParams.setMargins(0, 0, 0, dp(3));
+            metaColumn.addView(source, sourceParams);
+        } else if (!TextUtils.isEmpty(sourceLabel)) {
+            TextView source = new TextView(context);
+            source.setText(sourceLabel.substring(0, 1).toUpperCase());
+            source.setTextColor(getSourceAppColor(historyText.packageName, unread));
+            source.setTextSize(10);
+            source.setGravity(Gravity.CENTER);
+            source.setBackgroundResource(R.drawable.one_ui_icon_background);
+            source.setSingleLine(true);
+            source.setOnClickListener(openSourceListener);
+            source.setOnLongClickListener(actionListener);
+            LinearLayout.LayoutParams sourceParams = new LinearLayout.LayoutParams(dp(28), dp(28));
+            sourceParams.setMargins(0, 0, 0, dp(3));
+            metaColumn.addView(source, sourceParams);
+        }
 
         TextView date = new TextView(context);
         date.setText(historyText.time);
         date.setTextColor(getResources().getColor(R.color.one_ui_text_secondary));
         date.setTextSize(9);
-        date.setGravity(Gravity.TOP);
+        date.setGravity(Gravity.CENTER);
         date.setSingleLine(true);
         date.setOnClickListener(openSourceListener);
         date.setOnLongClickListener(actionListener);
         metaColumn.addView(date, new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT));
-
-        String sourceLabel = getSourceAppLabel(historyText.packageName);
-        if (!TextUtils.isEmpty(sourceLabel)) {
-            TextView source = new TextView(context);
-            source.setText(sourceLabel);
-            source.setTextColor(getSourceAppColor(historyText.packageName, unread));
-            source.setTextSize(8);
-            source.setSingleLine(true);
-            source.setEllipsize(TextUtils.TruncateAt.END);
-            source.setOnClickListener(openSourceListener);
-            source.setOnLongClickListener(actionListener);
-            metaColumn.addView(source, new LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT));
-        }
 
         TextView message = new TextView(context);
         message.setText(historyText.message);
@@ -660,6 +676,42 @@ public class MainActivity extends AppCompatActivity {
         }
 
         return "";
+    }
+
+    private Drawable getSourceAppIcon(String packageName) {
+        if (TextUtils.isEmpty(packageName)) {
+            return null;
+        }
+
+        Drawable cachedIcon = getCachedSourceAppIcon(packageName);
+        if (cachedIcon != null) {
+            return cachedIcon;
+        }
+
+        try {
+            return getPackageManager().getApplicationIcon(packageName);
+        } catch (Exception ex) {
+            return null;
+        }
+    }
+
+    private Drawable getCachedSourceAppIcon(String packageName) {
+        File iconFile = new File(new File(getFilesDir(), "notification_icons"),
+                getSourceIconFileName(packageName));
+        if (!iconFile.exists()) {
+            return null;
+        }
+
+        Bitmap bitmap = BitmapFactory.decodeFile(iconFile.getAbsolutePath());
+        if (bitmap == null) {
+            return null;
+        }
+
+        return new BitmapDrawable(getResources(), bitmap);
+    }
+
+    private String getSourceIconFileName(String packageName) {
+        return packageName.replaceAll("[^a-zA-Z0-9._-]", "_") + ".png";
     }
 
     private int getSourceAppColor(String packageName, boolean unread) {

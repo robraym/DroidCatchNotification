@@ -17,6 +17,8 @@ import android.util.Log;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.util.HashMap;
+import java.util.Map;
 
 import ray.droid.com.droidcatchnotification.common.DroidCommon;
 
@@ -29,10 +31,12 @@ import static ray.droid.com.droidcatchnotification.common.DroidCommon.TAG;
 
 public class DroidNotification extends DroidBaseNotification {
     private static final long DUPLICATE_WINDOW_MS = 15000;
+    private static final int MAX_TRACKED_NOTIFICATION_KEYS = 100;
     private static final String STATE_PREFS = "catch_notification_state";
     private static final String PREF_CHARGING_ACTIVE = "charging_active";
     private static String lastFingerprint = "";
     private static long lastFingerprintTime = 0;
+    private static final Map<String, String> lastContentByNotificationKey = new HashMap<>();
 
     CharSequence tit;
     String msg;
@@ -53,7 +57,7 @@ public class DroidNotification extends DroidBaseNotification {
         if (tit != null && !tit.toString().isEmpty()) {
 
             try {
-                if (isDuplicateNotification()) {
+                if (isDuplicateNotification(sbn)) {
                     Log.i(TAG, "Duplicated notification ignored");
                     return;
                 }
@@ -102,15 +106,28 @@ public class DroidNotification extends DroidBaseNotification {
                 .trim();
     }
 
-    private boolean isDuplicateNotification() {
+    private boolean isDuplicateNotification(StatusBarNotification sbn) {
         long now = System.currentTimeMillis();
-        String fingerprint = (sourcePackageName + "|" + tit + "|" + msg).trim().toLowerCase();
+        String contentFingerprint = (sourcePackageName + "|" + tit + "|" + msg).trim().toLowerCase();
+        String notificationKey = sbn == null ? "" : sanitizeHistoryField(sbn.getKey());
 
-        if (fingerprint.equals(lastFingerprint) && now - lastFingerprintTime < DUPLICATE_WINDOW_MS) {
+        if (!TextUtils.isEmpty(notificationKey)) {
+            String previousContent = lastContentByNotificationKey.get(notificationKey);
+            if (contentFingerprint.equals(previousContent)) {
+                return true;
+            }
+
+            if (lastContentByNotificationKey.size() > MAX_TRACKED_NOTIFICATION_KEYS) {
+                lastContentByNotificationKey.clear();
+            }
+            lastContentByNotificationKey.put(notificationKey, contentFingerprint);
+        }
+
+        if (contentFingerprint.equals(lastFingerprint) && now - lastFingerprintTime < DUPLICATE_WINDOW_MS) {
             return true;
         }
 
-        lastFingerprint = fingerprint;
+        lastFingerprint = contentFingerprint;
         lastFingerprintTime = now;
         return false;
     }
@@ -201,7 +218,12 @@ public class DroidNotification extends DroidBaseNotification {
             return;
         }
 
-        Bundle extras = mStatusBarNotification.getNotification().extras;
+        Notification notification = mStatusBarNotification.getNotification();
+        if (notification == null) {
+            return;
+        }
+
+        Bundle extras = notification.extras;
         if (extras == null) {
             return;
         }
@@ -235,8 +257,6 @@ public class DroidNotification extends DroidBaseNotification {
             }
         }
 
-        imageFileName = saveNotificationImage(context, extras);
-
         if (isBackgroundCheckingNotification()) {
             tit = "";
             msg = "";
@@ -247,7 +267,76 @@ public class DroidNotification extends DroidBaseNotification {
             Log.i(TAG, "System/loading notification ignored: " + pack);
             tit = "";
             msg = "";
+            return;
         }
+
+        saveSourceAppIcon(context, pack, notification);
+        imageFileName = saveNotificationImage(context, extras);
+    }
+
+    private void saveSourceAppIcon(Context context, String packageName, Notification notification) {
+        if (TextUtils.isEmpty(packageName)) {
+            return;
+        }
+
+        File iconDir = new File(context.getFilesDir(), "notification_icons");
+        if (!iconDir.exists() && !iconDir.mkdirs()) {
+            return;
+        }
+
+        File iconFile = new File(iconDir, getSourceIconFileName(packageName));
+        if (iconFile.exists()) {
+            return;
+        }
+
+        Drawable icon = getApplicationIconDrawable(packageName);
+        if (icon == null) {
+            icon = getNotificationSmallIconDrawable(notification);
+        }
+        if (icon == null) {
+            return;
+        }
+
+        Bitmap bitmap = drawableToBitmap(icon, Math.max(48, Math.round(48 * getResources().getDisplayMetrics().density)));
+        try (FileOutputStream outputStream = new FileOutputStream(iconFile)) {
+            bitmap.compress(Bitmap.CompressFormat.PNG, 90, outputStream);
+        } catch (Exception ex) {
+            Log.d(TAG, "Unable to save source app icon: " + packageName);
+        }
+    }
+
+    private Drawable getApplicationIconDrawable(String packageName) {
+        try {
+            return getPackageManager().getApplicationIcon(packageName);
+        } catch (Exception ex) {
+            return null;
+        }
+    }
+
+    @TargetApi(Build.VERSION_CODES.M)
+    private Drawable getNotificationSmallIconDrawable(Notification notification) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M || notification == null
+                || notification.getSmallIcon() == null) {
+            return null;
+        }
+
+        try {
+            return notification.getSmallIcon().loadDrawable(this);
+        } catch (Exception ex) {
+            return null;
+        }
+    }
+
+    private Bitmap drawableToBitmap(Drawable drawable, int size) {
+        Bitmap bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(bitmap);
+        drawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
+        drawable.draw(canvas);
+        return bitmap;
+    }
+
+    private String getSourceIconFileName(String packageName) {
+        return packageName.replaceAll("[^a-zA-Z0-9._-]", "_") + ".png";
     }
 
     private String saveNotificationImage(Context context, Bundle extras) {
