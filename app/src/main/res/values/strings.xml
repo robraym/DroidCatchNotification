@@ -61,6 +61,8 @@
     <string name="trash_clear_message">Todas as notificações da lixeira serão apagadas definitivamente.</string>
     <string name="trash_clear_confirm">Limpar</string>
     <string name="dialog_cancel">Cancelar</string>
+    <string name="action_send_to_trash">Enviar para a lixeira</string>
+    <string name="action_restore_notification">Restaurar notificação</string>
     <string name="history_item_icon">N</string>
     <string name="history_item_unknown_date">Sem data</string>
 </resources>

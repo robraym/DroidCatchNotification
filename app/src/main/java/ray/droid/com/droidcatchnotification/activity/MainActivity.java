@@ -45,7 +45,6 @@ import ray.droid.com.droidcatchnotification.R;
 import ray.droid.com.droidcatchnotification.common.DroidCommon;
 
 public class MainActivity extends AppCompatActivity {
-    private static final int MAX_VISIBLE_HISTORY = 100;
     private static final long AUTO_REFRESH_INTERVAL_MS = 1500;
 
     private Context context;
@@ -294,9 +293,8 @@ public class MainActivity extends AppCompatActivity {
 
     private List<HistoryGroup> groupHistory(List<String> history) {
         Map<String, HistoryGroup> groupedHistory = new LinkedHashMap<>();
-        int visibleItems = Math.min(history.size(), MAX_VISIBLE_HISTORY);
 
-        for (int index = history.size() - 1; index >= history.size() - visibleItems; index--) {
+        for (int index = history.size() - 1; index >= 0; index--) {
             HistoryText item = parseHistoryLine(history.get(index));
             HistoryGroup group = groupedHistory.get(item.day);
             if (group == null) {
@@ -349,6 +347,21 @@ public class MainActivity extends AppCompatActivity {
         count.setSingleLine(true);
         header.addView(count);
 
+        ImageView groupAction = createHistoryActionButton(showingTrash);
+        groupAction.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (showingTrash) {
+                    showRestoreGroupDialog(group);
+                } else {
+                    showTrashGroupDialog(group);
+                }
+            }
+        });
+        LinearLayout.LayoutParams groupActionParams = new LinearLayout.LayoutParams(dp(32), dp(32));
+        groupActionParams.setMargins(dp(8), 0, 0, 0);
+        header.addView(groupAction, groupActionParams);
+
         header.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -358,17 +371,6 @@ public class MainActivity extends AppCompatActivity {
                     expandedDays.add(group.day);
                 }
                 renderHistory();
-            }
-        });
-        header.setOnLongClickListener(new View.OnLongClickListener() {
-            @Override
-            public boolean onLongClick(View view) {
-                if (showingTrash) {
-                    showRestoreGroupDialog(group);
-                } else {
-                    showTrashGroupDialog(group);
-                }
-                return true;
             }
         });
 
@@ -396,19 +398,7 @@ public class MainActivity extends AppCompatActivity {
                 openSourceApp(historyText);
             }
         };
-        View.OnLongClickListener actionListener = new View.OnLongClickListener() {
-            @Override
-            public boolean onLongClick(View view) {
-                if (showingTrash) {
-                    showRestoreDialog(historyText);
-                } else {
-                    showTrashDialog(historyText);
-                }
-                return true;
-            }
-        };
         wrapper.setOnClickListener(openSourceListener);
-        wrapper.setOnLongClickListener(actionListener);
 
         LinearLayout.LayoutParams wrapperParams = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
@@ -434,7 +424,6 @@ public class MainActivity extends AppCompatActivity {
         metaColumn.setOrientation(LinearLayout.VERTICAL);
         metaColumn.setGravity(Gravity.CENTER_HORIZONTAL);
         metaColumn.setOnClickListener(openSourceListener);
-        metaColumn.setOnLongClickListener(actionListener);
         item.addView(metaColumn, new LinearLayout.LayoutParams(dp(38), LinearLayout.LayoutParams.WRAP_CONTENT));
 
         String sourceLabel = getSourceAppLabel(historyText.packageName);
@@ -447,7 +436,6 @@ public class MainActivity extends AppCompatActivity {
             source.setPadding(dp(3), dp(3), dp(3), dp(3));
             source.setContentDescription(sourceLabel);
             source.setOnClickListener(openSourceListener);
-            source.setOnLongClickListener(actionListener);
             LinearLayout.LayoutParams sourceParams = new LinearLayout.LayoutParams(dp(28), dp(28));
             sourceParams.setMargins(0, 0, 0, dp(2));
             metaColumn.addView(source, sourceParams);
@@ -461,7 +449,6 @@ public class MainActivity extends AppCompatActivity {
             source.setIncludeFontPadding(false);
             source.setSingleLine(true);
             source.setOnClickListener(openSourceListener);
-            source.setOnLongClickListener(actionListener);
             LinearLayout.LayoutParams sourceParams = new LinearLayout.LayoutParams(dp(28), dp(28));
             sourceParams.setMargins(0, 0, 0, dp(2));
             metaColumn.addView(source, sourceParams);
@@ -475,7 +462,6 @@ public class MainActivity extends AppCompatActivity {
         date.setIncludeFontPadding(false);
         date.setSingleLine(true);
         date.setOnClickListener(openSourceListener);
-        date.setOnLongClickListener(actionListener);
         metaColumn.addView(date, new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT));
@@ -492,7 +478,6 @@ public class MainActivity extends AppCompatActivity {
         message.setEllipsize(TextUtils.TruncateAt.END);
         message.setLineSpacing(0, 1);
         message.setOnClickListener(openSourceListener);
-        message.setOnLongClickListener(actionListener);
         LinearLayout.LayoutParams messageParams = new LinearLayout.LayoutParams(
                 0,
                 LinearLayout.LayoutParams.WRAP_CONTENT,
@@ -516,12 +501,25 @@ public class MainActivity extends AppCompatActivity {
                     renderHistory();
                 }
             });
-            imagePreview.setOnLongClickListener(actionListener);
             LinearLayout.LayoutParams imageParams = new LinearLayout.LayoutParams(dp(54), dp(54));
             imageParams.setMargins(dp(8), 0, 0, 0);
             item.addView(imagePreview, imageParams);
         }
-        item.setOnLongClickListener(actionListener);
+
+        ImageView itemAction = createHistoryActionButton(showingTrash);
+        itemAction.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (showingTrash) {
+                    showRestoreDialog(historyText);
+                } else {
+                    showTrashDialog(historyText);
+                }
+            }
+        });
+        LinearLayout.LayoutParams actionParams = new LinearLayout.LayoutParams(dp(32), dp(32));
+        actionParams.setMargins(dp(6), 0, 0, 0);
+        item.addView(itemAction, actionParams);
 
         View divider = new View(context);
         divider.setBackgroundColor(getResources().getColor(R.color.one_ui_stroke));
@@ -530,6 +528,23 @@ public class MainActivity extends AppCompatActivity {
                 Math.max(1, dp(1))));
 
         return wrapper;
+    }
+
+    private ImageView createHistoryActionButton(boolean restoreAction) {
+        ImageView action = new ImageView(context);
+        action.setImageResource(restoreAction ? R.drawable.ic_restore_24 : R.drawable.ic_trash_24);
+        action.setColorFilter(getResources().getColor(restoreAction
+                ? R.color.one_ui_blue
+                : R.color.one_ui_red));
+        action.setBackgroundResource(R.drawable.one_ui_icon_background);
+        action.setPadding(dp(7), dp(7), dp(7), dp(7));
+        action.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
+        action.setClickable(true);
+        action.setFocusable(true);
+        action.setContentDescription(getString(restoreAction
+                ? R.string.action_restore_notification
+                : R.string.action_send_to_trash));
+        return action;
     }
 
     private Bitmap getNotificationImage(String imageFileName) {

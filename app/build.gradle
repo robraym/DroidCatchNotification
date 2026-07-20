@@ -17,8 +17,8 @@ android {
         applicationId "ray.droid.com.droidcatchnotification"
         minSdk 19
         targetSdk 36
-        versionCode 8
-        versionName "2.4"
+        versionCode 9
+        versionName "2.5"
     }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
